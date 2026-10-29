@@ -1,0 +1,1 @@
+{"deviceName":"SYNTHETIC_TEST_FIXTURE","deviceNumber":"","serial":"","manufacturer":"","epc":"47616E676120526F6F6D2020","value":"Ganga Room","Zone":"Floor","rssi":"-25","rssiRaw":"104","rssiUnit":"dBm","timestamp":"2026-10-29 22:45:00.000","angle":"N/A","epcScanCount":1,"sessionTotalCount":1,"sessionUniqueCount":1}

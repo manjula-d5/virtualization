@@ -1,0 +1,30 @@
+*.iml
+.gradle
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+
+# Local build outputs and IDE state
+**/build/
+.idea/
+.kotlin/
+tmp/
+output/
+*.log
+*.apk
+*.aab
+
+# Local reference extraction and captured device records
+/sdk-documentation.txt
+/RFID_Scan_*.csv
+/RFID_Scan_*.txt

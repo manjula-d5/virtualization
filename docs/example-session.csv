@@ -1,0 +1,4 @@
+timestamp,deviceName,deviceNumber,serial,manufacturer,firmwareVersion,epc,Zone,rssi,phase,angle,antennaId,antennaPort,frequency,channel,transmitPower,epcScanCount,sessionTotalCount,sessionUniqueCount,batteryLevel,tid,userMemory,pc,crc,protocol,rawData,queryMode,validationError,moduleFirmware,module,hardwareVersion,sdkVersion,connectionType,connectionStatus,readerType,readRange,readerTemperature,regionCode,regionStartIndex,regionEndIndex,configuredAntenna,inventorySession,qValue,scanInterval,memoryWordPointer,memoryWordLength,eventSource,rssiRaw,rssiUnit,rssiEncoding
+2026-10-29 21:45:00.001,SYNTHETIC_TEST_FIXTURE,,,,,AABB,Floor,,,,,,,,,1,1,1,,,,,,,,EPC,,,,,,,,,,,,,,,,,,,,inventoryCallback,,,
+2026-10-29 21:45:00.002,SYNTHETIC_TEST_FIXTURE,,,,,AABB,Floor,,,,,,,,,2,2,1,,,,,,,,EPC,,,,,,,,,,,,,,,,,,,,inventoryCallback,,,
+2026-10-29 21:45:00.003,SYNTHETIC_TEST_FIXTURE,,,,,CCDD,Floor,,,,,,,,,1,3,2,,,,,,,,EPC,,,,,,,,,,,,,,,,,,,,inventoryCallback,,,
