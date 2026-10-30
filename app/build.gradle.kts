@@ -41,6 +41,8 @@ android {
 }
 
 dependencies {
+    implementation("com.github.mwiede:jsch:2.28.7")
+    implementation("org.bouncycastle:bcprov-jdk18on:1.80")
     implementation(files("libs/URFIDLibrary-v2.4.0307.aar"))
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.11.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.11.0")

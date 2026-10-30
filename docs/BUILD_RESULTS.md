@@ -58,3 +58,19 @@ TXT records are now one JSON object per event, with properly escaped strings and
 
 One public TXT is published only after both Floor and BackOffice contain reads. Pending closed segments are journaled across restarts. Output preserves order and zone and recalculates counters across the combined file. Tests cover both scan orders, repeated EPCs across zones, publisher recreation, new batch reset, and DCIM save failure/retry. Live counters remain scoped to the current scanning segment. Physical stop/start sequencing and DCIM publication still require XR2 validation.
 `nHandheld tilt / configured band update: assembleDebug, testDebugUnitTest (22 tests, zero failures), and lintDebug passed. Sensor math, missing samples, JSON field provenance and configured band mapping covered by regression test. Live XR2 sensor availability and physical calibration remain unverified.
+
+## Automatic upload integration (deployment pending)
+
+App enqueues each combined TXT only after local DCIM save. Persistent file markers, HTTPS certificate pinning, authorization and SHA-256/byte-count acknowledgement are implemented. Receiver regression tests (3 tests) pass for exact-byte preservation, bad auth/path/checksum rejection, both-zone validation, idempotence and conflict protection. Live SSH authentication failed with both the original and confirmed password. No remote service was installed, no live transfer is claimed, and a privately provisioned APK is still required. See server/README.md.
+
+Upload verification: Android assembleDebug/testDebugUnitTest/lintDebug passed; 23 JVM tests and 3 receiver tests passed. Live deployment and end-to-end upload remain blocked by rejected SSH authentication.
+
+## Active transport: SFTP
+
+The user-supplied reference specifies SFTP port 22. The prepared HTTPS alternative was replaced, and its receiver files removed. The app uses maintained JSch, a pinned host key, encrypted on-device password entry, temporary remote upload plus readback SHA-256/size verification, and a persistent retry queue. It creates no API service and does not embed the root password. SSH host-key retrieval succeeded. Live password authentication failed twice; successful real-server upload is not claimed.
+
+Final SFTP build: assembleDebug, testDebugUnitTest (23 tests, no failures) and lintDebug passed. APK signature verified. Authentication failure from workstation remains unresolved; live SFTP transfer unverified.
+
+Connected-device upload diagnosis: three .pending queue markers exist and no SFTP credential preferences are present. SSH root authentication was retested and rejected. Added RfidUpload Logcat/status diagnostics, including explicit missing-credential count and checksum-verified success. Local saves and pending files remain intact.
+
+Connected-device secure provisioning completed: one credential-free maintenance instrumentation test stored and verified the supplied password in Android Keystore-protected app storage via authorized ADB stdin; temporary plaintext input and maintenance test APK were removed. App now reports SFTP upload ready and attempts the queued file. On-device JSch returns Auth fail for methods publickey,password; remote authentication remains the sole observed upload blocker. Pending file retained. No password embedded in the main APK or source.

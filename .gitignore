@@ -28,3 +28,9 @@ output/
 /sdk-documentation.txt
 /RFID_Scan_*.csv
 /RFID_Scan_*.txt
+
+# Private deployment configuration (never commit upload credentials)
+/app/src/main/assets/upload-config.properties
+/app/src/main/assets/upload-server.crt
+__pycache__/
+*.pyc

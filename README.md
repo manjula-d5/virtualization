@@ -1,5 +1,9 @@
 # RFID Reader Diagnostics
 
+Login prompt removed: automatic upload uses credentials already stored securely on the device, if available. Devices without stored credentials show Server provisioning required and continue local saving. Embedding the supplied root password was blocked by automatic security review; fully unattended first-time provisioning requires a restricted upload-only credential/server setup. No root credential was added to assets, source or the APK.
+
+Automatic upload uses SFTP to root@103.189.89.76:22, destination /opt/rfid_log_manjula/. After both zones finish, the combined TXT is saved in DCIM and the identical file is queued for transfer under the same filename. Enter the server password once in Server login; it is stored with Android Keystore encryption and is not embedded in the APK/source. SSH host-key checking is strict. Byte count and SHA-256 are verified after upload. Network failures retry while the process is alive or on reopening; rejected authentication pauses until Server login is corrected. The provided password was rejected from this workstation, so a successful live transfer is still unverified. See server/README.md.
+
 Log naming: readRange now means the selected/confirmed RF power in dBm, matching transmitPower (for example 30 → readRange="30", readRangeUnit="dBm"). The SDK's independent 0–100 range setting is preserved as vendorReadRange. This changes log labeling; it does not apply a second vendor setRange command or claim distance in metres.
 
 Scan feedback: actual inventory callbacks and non-null selected-EPC probe results play the supplied SDK scan_buzzer.ogg sound (copied unchanged as rfid_scan_beep.ogg). Media volume controls loudness. Audio is limited to one beep per 100 ms, without dropping logged events. SoundPool loads asynchronously at scan start and is released on Stop/disconnect; missing/audio failures do not interrupt logging. No microphone/audio runtime permissions are needed.
