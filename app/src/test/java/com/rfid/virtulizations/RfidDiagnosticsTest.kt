@@ -39,14 +39,14 @@ class RfidDiagnosticsTest {
         assertEquals("865.1–867.9 MHz", row.getString("configuredFrequencyBand"))
         assertEquals("", configuredFrequencyBand(ReaderInfo(mapOf("regionCode" to "99"))))
     }
-    @Test fun combinedZonesSaveOneFileInEitherOrderAndContinueCounters() {
+    @Test fun combinedZonesSaveOneFileInEitherOrderWithSeparateSessions() {
         for (order in listOf(listOf("Floor", "BackOffice"), listOf("BackOffice", "Floor"))) {
             val directory = temp.newFolder()
             val saved = mutableListOf<File>()
             fun segment(zone: String): File {
                 val log = RfidCsvLogger.create(directory, zone)
                 val counters = SessionCounters()
-                repeat(2) { log.append(counters.accept(event("AABB")), zone, QueryMode.EPC, ReaderInfo()) }
+                repeat(2) { log.append(counters.accept(event("AABB")), zone, QueryMode.EPC, ReaderInfo(mapOf("transmitPower" to "15"))) }
                 log.close(); return log.file
             }
             val publisher = CombinedZoneLogs(directory) { saved.add(it); "DCIM/${it.name}" }
@@ -56,14 +56,67 @@ class RfidDiagnosticsTest {
             val restored = CombinedZoneLogs(directory) { saved.add(it); "DCIM/${it.name}" }
             assertNotNull(restored.accept(segment(order[1])))
             assertEquals(1, saved.size)
+            assertEquals("RFID_Scan_BothZones_15dbm.txt", saved.single().name)
             val rows = saved.single().readLines().map { org.json.JSONObject(it) }
             assertEquals(listOf(order[0], order[0], order[1], order[1]), rows.map { it.getString("Zone") })
-            assertEquals(listOf(1L, 2L, 3L, 4L), rows.map { it.getLong("sessionTotalCount") })
-            assertEquals(4L, rows.last().getLong("epcScanCount"))
+            assertEquals(listOf(1, 1, 2, 2), rows.map { it.getInt("sessionNumber") })
+            assertEquals(listOf(1L, 2L, 1L, 2L), rows.map { it.getLong("sessionTotalCount") })
+            assertEquals(2L, rows.last().getLong("epcScanCount"))
             assertEquals(1, rows.last().getInt("sessionUniqueCount"))
             assertFalse(File(directory, ".pending-zones").exists())
             assertNull(restored.accept(segment(order[0])))
             assertEquals(1, saved.size)
+        }
+    }
+    @Test fun repeatedZoneScansHaveSeparateSessionsAndPowerFilesNeverOverwrite() {
+        val directory = temp.newFolder()
+        val saved = mutableListOf<File>()
+        val publisher = CombinedZoneLogs(directory) { saved.add(it); it.absolutePath }
+        fun segment(zone: String, power: String): File {
+            val log = RfidCsvLogger.create(directory, zone)
+            log.append(SessionCounters().accept(event()), zone, QueryMode.EPC,
+                ReaderInfo(mapOf("transmitPower" to power)))
+            log.close()
+            return log.file
+        }
+        repeat(2) {
+            assertNull(publisher.accept(segment("BackOffice", "15")))
+            assertNull(publisher.accept(segment("BackOffice", "15")))
+            assertNotNull(publisher.accept(segment("Floor", "15")))
+        }
+        assertEquals(listOf("RFID_Scan_BothZones_15dbm.txt", "RFID_Scan_BothZones_15dbm_2.txt"), saved.map { it.name })
+        saved.forEach { file ->
+            val rows = file.readLines().map { org.json.JSONObject(it) }
+            assertEquals(listOf(1, 2, 3), rows.map { it.getInt("sessionNumber") })
+            assertTrue(rows.all { it.getInt("sessionTotalCount") == 1 })
+        }
+        assertNull(publisher.accept(segment("BackOffice", "15")))
+        assertNotNull(publisher.accept(segment("Floor", "20")))
+        assertEquals("RFID_Scan_BothZones_15-20dbm.txt", saved.last().name)
+    }
+    @Test fun separateZoneFilesPreserveCombinedRecordsAndSessionCounters() {
+        val directory = temp.newFolder()
+        val zoneFiles = mutableListOf<File>()
+        var combined: File? = null
+        val publisher = CombinedZoneLogs(directory, saveZone = { zoneFiles.add(it) }) {
+            combined = it; it.absolutePath
+        }
+        for (zone in listOf("BackOffice", "Floor")) {
+            val log = RfidCsvLogger.create(directory, zone)
+            val counters = SessionCounters()
+            repeat(2) {
+                log.append(counters.accept(event("AABB")), zone, QueryMode.EPC,
+                    ReaderInfo(mapOf("transmitPower" to "30")))
+            }
+            log.close()
+            publisher.accept(log.file)
+        }
+        assertEquals(listOf("RFID_Scan_BackOffice_30dbm.txt", "RFID_Scan_Floor_30dbm.txt"), zoneFiles.map { it.name })
+        val allRows = combined!!.readLines()
+        zoneFiles.forEachIndexed { index, file ->
+            val rows = file.readLines()
+            assertEquals(allRows.filter { org.json.JSONObject(it).getInt("sessionNumber") == index + 1 }, rows)
+            assertEquals(listOf(1, 2), rows.map { org.json.JSONObject(it).getInt("epcScanCount") })
         }
     }
     @Test fun combinedSaveFailureKeepsPendingSegmentsForRetry() {
