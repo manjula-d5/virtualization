@@ -34,7 +34,11 @@ class RfidSdkManager(private val context: Context) : RfidReader {
             check(sdk.connect()) { "XR2 UHF connection failed. Check reader hardware and close other RFID apps." }
             manager = checkNotNull(sdk.rfidManager) { "SDK returned no RFID manager" }
             check(isConnected()) { "RFID module is not connected" }
-            manager?.enableLog(false)
+            val m = checkNotNull(manager)
+            m.enableLog(false)
+            val maxPower = if (m.readerType == 80) 26 else 30
+            runCatching { m.setOutputPower(maxPower) }
+            runCatching { m.setRange(100) }
             return info()
         } catch (e: Throwable) { disconnect(); throw e }
     }
@@ -70,6 +74,10 @@ class RfidSdkManager(private val context: Context) : RfidReader {
         m.setQueryMode(mode.sdkValue)
         check(m.queryMode == mode.sdkValue) { "Reader did not confirm query mode ${mode.label}" }
         configuredMode = mode
+        val maxPower = if (m.readerType == 80) 26 else 30
+        val targetPower = m.outputPower.takeIf { it in 5..maxPower } ?: maxPower
+        runCatching { m.setOutputPower(targetPower) }
+        runCatching { m.setRange(100) }
         return info()
     }
     override fun power(value: Int): ReaderInfo {
@@ -78,6 +86,7 @@ class RfidSdkManager(private val context: Context) : RfidReader {
         require(value in 5..max) { "Power must be 5..$max dBm for this reader" }
         check(m.setOutputPower(value) == 0) { "Reader rejected transmit power" }
         check(m.outputPower == value) { "Power readback did not match" }
+        runCatching { m.setRange(100) }
         return info()
     }
     override fun range(value: Int): ReaderInfo {
@@ -89,6 +98,10 @@ class RfidSdkManager(private val context: Context) : RfidReader {
     }
     override fun start(targetEpc: String?, onTag: (RfidTagEvent) -> Unit, onUnexpectedEnd: () -> Unit) {
         val m = checkNotNull(manager)
+        val maxPower = if (m.readerType == 80) 26 else 30
+        val targetPower = m.outputPower.takeIf { it in 5..maxPower } ?: maxPower
+        runCatching { m.setOutputPower(targetPower) }
+        runCatching { m.setRange(100) }
         runCatching { scanSound.start() }
         val emit: (RfidTagEvent) -> Unit = { event ->
             onTag(event)

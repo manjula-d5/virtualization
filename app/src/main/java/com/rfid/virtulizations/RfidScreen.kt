@@ -15,6 +15,7 @@ import kotlinx.coroutines.delay
 @Composable
 fun RfidScreen(model: RfidViewModel, onAllowStorage: () -> Unit, onExport: (String) -> Unit) {
     val state by model.state.collectAsStateWithLifecycle()
+    val uploadStatus by model.uploadStatus.collectAsStateWithLifecycle()
     val storageReady by model.storage.ready.collectAsStateWithLifecycle()
     val repo = model.repository
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -38,6 +39,7 @@ fun RfidScreen(model: RfidViewModel, onAllowStorage: () -> Unit, onExport: (Stri
             item {
                 Panel {
                     Text("Session setup", style = MaterialTheme.typography.titleMedium)
+                    Text(uploadStatus, style = MaterialTheme.typography.bodySmall)
                     if (!state.scanning && state.endedAt != null) Text(state.message, style = MaterialTheme.typography.bodySmall)
                     if (state.scanning) Text("● SCANNING", color = MaterialTheme.colorScheme.primary)
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
