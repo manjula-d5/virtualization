@@ -11,7 +11,10 @@ class RfidApplication : Application() {
     val uploader by lazy { RfidLogUploader(this) }
     val repository by lazy {
         val directory = File(getExternalFilesDir(Environment.DIRECTORY_DCIM) ?: filesDir, "RFID")
-        val combined = CombinedZoneLogs(directory) { file ->
+        val combined = CombinedZoneLogs(directory, saveZone = { file ->
+            dcimStorage.save(file)
+            uploader.enqueue(file)
+        }) { file ->
             val destination = dcimStorage.save(file)
             uploader.enqueue(file)
             destination
