@@ -56,7 +56,7 @@ class RfidDiagnosticsTest {
             val restored = CombinedZoneLogs(directory) { saved.add(it); "DCIM/${it.name}" }
             assertNotNull(restored.accept(segment(order[1])))
             assertEquals(1, saved.size)
-            assertEquals("RFID_Scan_BothZones_15dbm.txt", saved.single().name)
+            assertTrue(saved.single().name.matches(Regex("RFID_Scan_BothZones_15dbm_[0-9]+_[0-9a-f]{8}\\.txt")))
             val rows = saved.single().readLines().map { org.json.JSONObject(it) }
             assertEquals(listOf(order[0], order[0], order[1], order[1]), rows.map { it.getString("Zone") })
             assertEquals(listOf(1, 1, 2, 2), rows.map { it.getInt("sessionNumber") })
@@ -84,15 +84,24 @@ class RfidDiagnosticsTest {
             assertNull(publisher.accept(segment("BackOffice", "15")))
             assertNotNull(publisher.accept(segment("Floor", "15")))
         }
-        assertEquals(listOf("RFID_Scan_BothZones_15dbm.txt", "RFID_Scan_BothZones_15dbm_2.txt"), saved.map { it.name })
+        assertEquals(2, saved.map { it.name }.distinct().size)
+        assertTrue(saved.all { it.name.matches(Regex("RFID_Scan_BothZones_15dbm_[0-9]+_[0-9a-f]{8}\\.txt")) })
         saved.forEach { file ->
             val rows = file.readLines().map { org.json.JSONObject(it) }
             assertEquals(listOf(1, 2, 3), rows.map { it.getInt("sessionNumber") })
             assertTrue(rows.all { it.getInt("sessionTotalCount") == 1 })
         }
         assertNull(publisher.accept(segment("BackOffice", "15")))
-        assertNotNull(publisher.accept(segment("Floor", "20")))
-        assertEquals("RFID_Scan_BothZones_15-20dbm.txt", saved.last().name)
+        assertNull(publisher.accept(segment("Floor", "20")))
+        val restored = CombinedZoneLogs(directory) { saved.add(it); it.absolutePath }
+        assertNotNull(restored.accept(segment("BackOffice", "20")))
+        assertTrue(saved.last().name.matches(Regex("RFID_Scan_BothZones_20dbm_[0-9]+_[0-9a-f]{8}\\.txt")))
+        assertTrue(saved.last().readLines().all { org.json.JSONObject(it).getString("transmitPower") == "20" })
+        assertTrue(File(directory, ".pending-zones").exists())
+        assertNotNull(restored.accept(segment("Floor", "15")))
+        assertTrue(saved.last().name.startsWith("RFID_Scan_BothZones_15dbm_"))
+        assertTrue(saved.last().readLines().all { org.json.JSONObject(it).getString("transmitPower") == "15" })
+        assertFalse(File(directory, ".pending-zones").exists())
     }
     @Test fun separateZoneFilesPreserveCombinedRecordsAndSessionCounters() {
         val directory = temp.newFolder()
@@ -111,7 +120,7 @@ class RfidDiagnosticsTest {
             log.close()
             publisher.accept(log.file)
         }
-        assertEquals(listOf("RFID_Scan_BackOffice_30dbm.txt", "RFID_Scan_Floor_30dbm.txt"), zoneFiles.map { it.name })
+        assertEquals(listOf(combined!!.name.replace("BothZones", "BackOffice"), combined!!.name.replace("BothZones", "Floor")), zoneFiles.map { it.name })
         val allRows = combined!!.readLines()
         zoneFiles.forEachIndexed { index, file ->
             val rows = file.readLines()

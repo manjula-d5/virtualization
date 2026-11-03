@@ -68,7 +68,7 @@ data class RfidUiState(
     val reader: ReaderInfo = ReaderInfo(), val zone: String? = null, val mode: QueryMode = QueryMode.EPC,
     val total: Long = 0, val unique: Int = 0, val written: Long = 0, val unlogged: Long = 0,
     val invalid: Long = 0, val rows: List<CountedEvent> = emptyList(), val filePath: String? = null,
-    val message: String = "Connect the XR2 reader to begin.", val error: String? = null,
+    val message: String = "Select and connect an RFID reader to begin.", val error: String? = null,
     val startedAt: Long? = null, val endedAt: Long? = null, val savedFiles: List<String> = emptyList(),
     val targetEpc: String = "", val savedLocation: String? = null
 )
