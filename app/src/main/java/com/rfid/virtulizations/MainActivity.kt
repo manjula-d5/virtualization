@@ -20,6 +20,20 @@ class MainActivity : ComponentActivity() {
     private val model: RfidViewModel by viewModels()
 
     private var exportSource: String? = null
+    private val readerPermissions = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { grants ->
+        if (grants.values.all { it }) model.repository.connect()
+        else Toast.makeText(this, "Allow Nearby devices/location access to connect the Zebra reader", Toast.LENGTH_LONG).show()
+    }
+    private fun connectReader() {
+        if (model.reader.usesXr2) { model.repository.connect(); return }
+        val permissions = if (android.os.Build.VERSION.SDK_INT >= 31) arrayOf(
+            android.Manifest.permission.BLUETOOTH_CONNECT, android.Manifest.permission.BLUETOOTH_SCAN)
+        else arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION)
+        val missing = permissions.filter {
+            androidx.core.content.ContextCompat.checkSelfPermission(this, it) != android.content.pm.PackageManager.PERMISSION_GRANTED
+        }
+        if (missing.isEmpty()) model.repository.connect() else readerPermissions.launch(missing.toTypedArray())
+    }
 
     private val legacyStoragePermission =
         registerForActivityResult(
@@ -182,7 +196,7 @@ class MainActivity : ComponentActivity() {
         (application as RfidApplication).tiltSensor.start()
 
         model.repository.foreground(true)
-        model.repository.connect()
+        connectReader()
     }
 
     override fun onStop() {

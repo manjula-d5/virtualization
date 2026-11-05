@@ -9,6 +9,7 @@ class RfidApplication : Application() {
     val dcimStorage by lazy { DcimLogStorage(this) }
     val tiltSensor by lazy { HandheldTiltSensor(this) }
     val uploader by lazy { RfidLogUploader(this) }
+    val reader by lazy { SelectableRfidReader(this) }
     val repository by lazy {
         val directory = File(getExternalFilesDir(Environment.DIRECTORY_DCIM) ?: filesDir, "RFID")
         val combined = CombinedZoneLogs(directory, saveZone = { file ->
@@ -19,12 +20,13 @@ class RfidApplication : Application() {
             uploader.enqueue(file)
             destination
         }
-        RfidRepository(RfidSdkManager(this), directory,
+        RfidRepository(reader, directory,
             publishFile = combined::accept, checkStorage = dcimStorage::checkPermission,
             enrichEvent = { it.copy(handheldTilt = tiltSensor.snapshot()) })
     }
 }
 class RfidViewModel(application: Application) : AndroidViewModel(application) {
+    val reader = (application as RfidApplication).reader
     val repository = (application as RfidApplication).repository
     val state = repository.state
     val storage = (application as RfidApplication).dcimStorage

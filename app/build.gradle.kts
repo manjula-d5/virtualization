@@ -11,7 +11,7 @@ android {
 
     defaultConfig {
         applicationId = "com.rfid.virtulizations"
-        minSdk = 24
+        minSdk = 29
         targetSdk = 37
         versionCode = 1
         versionName = "1.0"
@@ -44,6 +44,8 @@ dependencies {
     implementation("com.github.mwiede:jsch:2.28.7")
     implementation("org.bouncycastle:bcprov-jdk18on:1.80")
     implementation(files("libs/URFIDLibrary-v2.4.0307.aar"))
+    implementation(files("libs/rfidapi3lib-2.0.5.275.aar"))
+    implementation("androidx.localbroadcastmanager:localbroadcastmanager:1.0.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.11.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.11.0")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.11.0")

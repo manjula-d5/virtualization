@@ -30,7 +30,7 @@ fun RfidScreen(model: RfidViewModel, onAllowStorage: () -> Unit, onExport: (Stri
             verticalArrangement = Arrangement.spacedBy(12.dp)) {
             item {
                 Text("RFID Reader Diagnostics", style = MaterialTheme.typography.headlineMedium)
-                Text("XR2  /  LIVE INVENTORY & TXT", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                Text("XR2 & ZEBRA  /  LIVE INVENTORY & TXT", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
             }
             item {
                 if (state.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
@@ -53,7 +53,8 @@ fun RfidScreen(model: RfidViewModel, onAllowStorage: () -> Unit, onExport: (Stri
                         SelectionDropdown("RF Power", power, (5..30).map { it.toString() to "$it dBm" },
                             enabled = state.connected && !state.scanning && !state.busy,
                             modifier = Modifier.weight(1f),
-                            optionEnabled = { state.reader["readerType"] != "80" || it.toInt() <= 26 },
+                            optionEnabled = { if (state.reader["module"] == "Zebra") it in state.reader["supportedPowers"].split(",")
+                                else state.reader["readerType"] != "80" || it.toInt() <= 26 },
                             onSelect = { repo.power(it.toInt()) })
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
